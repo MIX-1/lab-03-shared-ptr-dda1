@@ -47,7 +47,9 @@ struct Counter {
 
   SharedPtr(SharedPtr&& r)  noexcept :
                                       ptr(move(r.ptr)),
-                                      counter(move(r.counter)) {}
+                                      counter(move(r.counter)) {
+    r.counter->Clean();
+  }
 
   ~SharedPtr() {
     counter->Clean();
@@ -60,6 +62,7 @@ struct Counter {
   }
 
   auto operator=(SharedPtr&& r) -> SharedPtr& {
+    counter->Clean();
     ptr = move(r.ptr);
     counter = move(r.counter);
     return *this;
