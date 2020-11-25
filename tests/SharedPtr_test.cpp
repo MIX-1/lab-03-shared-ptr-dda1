@@ -85,30 +85,3 @@ TEST(Accessory_methods, Swap) {
   EXPECT_EQ(*sharedPtr5, 18);
 }
 
-TEST(Equality, Ref) {
-  int val1 = 18;
-  int *pVal1 = &val1;
-  SharedPtr<int> sharedPtr1(&val1);
-  SharedPtr<int> sharedPtr2(sharedPtr1);
-  EXPECT_EQ(sharedPtr2.get(), pVal1);
-  EXPECT_EQ(*sharedPtr2, 18);
-
-  SharedPtr<int> sharedPtr3 = sharedPtr2;
-
-  EXPECT_EQ(sharedPtr3.get(), pVal1);
-  EXPECT_EQ(*sharedPtr3, 18);
-}
-
-TEST(Equality, Ref_Rvalue) {
-  int val1 = 18;
-  int *pVal1 = &val1;
-  SharedPtr<int> sharedPtr1(&val1);
-  SharedPtr<int> sharedPtr2(sharedPtr1);
-  EXPECT_EQ(sharedPtr2.get(), pVal1);
-  EXPECT_EQ(*sharedPtr2, 18);
-
-  SharedPtr<int> sharedPtr3 = move(sharedPtr2);
-
-  EXPECT_EQ(sharedPtr3.get(), pVal1);
-  EXPECT_EQ(*sharedPtr3, 18);
-}
