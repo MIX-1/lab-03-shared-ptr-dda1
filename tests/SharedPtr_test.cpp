@@ -149,3 +149,55 @@ TEST(Accessory_methods, Swap) {
   EXPECT_TRUE(sharedPtr2);
   EXPECT_TRUE(sharedPtr5);
 }
+
+class is_not_constructible {
+ public:
+  is_not_constructible& operator= (is_not_constructible&) = delete;
+};
+TEST(Exceptions, No_Copiable) {
+
+  try {
+    is_not_constructible object;
+    SharedPtr<is_not_constructible> sharedPtr1(&object);
+    SharedPtr<is_not_constructible> sharedPtr2(sharedPtr1);
+  } catch (std::runtime_error& e) {
+    EXPECT_EQ(e.what(), "Type not constructible.");
+  }
+}
+
+class is_not_assignable {
+ public:
+  is_not_assignable& operator= (is_not_assignable&&) = delete;
+};
+TEST(Exceptions, No_Assignable) {
+
+  try {
+    is_not_assignable object;
+    SharedPtr<is_not_assignable> sharedPtr1(&object);
+    SharedPtr<is_not_assignable> sharedPtr2;
+  } catch (std::runtime_error& e) {
+    EXPECT_EQ(e.what(), "Type not assignable.");
+  }
+}
+
+TEST(Exceptions, No_Copiable_equaling_operator) {
+  try {
+    is_not_constructible object;
+    SharedPtr<is_not_constructible> sharedPtr1(&object);
+    SharedPtr<is_not_constructible> sharedPtr2 = sharedPtr1;
+  } catch (std::runtime_error& e) {
+    std::string error = "Type not constructible.";
+    EXPECT_EQ(e.what(), error);
+  }
+}
+
+TEST(Exceptions, No_Assignable_equaling_operator) {
+  try {
+    is_not_assignable object;
+    SharedPtr<is_not_assignable> sharedPtr1(&object);
+    SharedPtr<is_not_assignable> sharedPtr2 = std::move(sharedPtr1);
+  } catch (std::runtime_error& e) {
+    std::string error = "Type not assignable.";
+    EXPECT_EQ(e.what(), error);
+  }
+}

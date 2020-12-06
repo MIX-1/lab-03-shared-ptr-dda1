@@ -3,11 +3,11 @@
 #ifndef INCLUDE_SHAREDPTR_HPP_
 #define INCLUDE_SHAREDPTR_HPP_
 
+#include <string>
 #include <atomic>
 #include <utility>
 
 using std :: atomic;
-using std :: move;
 
 template <typename T>
 struct Counter {
@@ -17,7 +17,7 @@ struct Counter {
   void AddCounter() {++counter;}
 
   void Clean() {
-    if (!--counter) {
+    if(!--counter) {
       ptr = nullptr;
       delete this;
     }
@@ -29,46 +29,70 @@ struct Counter {
   T *ptr;
 
   atomic<size_t> counter;
-  };
+};
 
-  template <typename T>
-  class SharedPtr {
-   public:
-    SharedPtr() {
-      ptr = nullptr;
-      counter = new Counter<T>(nullptr);
-    }
-
-    explicit SharedPtr(T* p) : ptr(p), counter(new Counter<T>(p)) {}
-
-  SharedPtr(const SharedPtr& r) : ptr(r.ptr), counter(r.counter) {
-    counter->AddCounter();
+template <typename T>
+class SharedPtr {
+ public:
+  SharedPtr() {
+    ptr = nullptr;
+    counter = new Counter<T>(nullptr);
   }
 
-    SharedPtr(SharedPtr&& r)  noexcept {
-      ptr = std::move(r.ptr);
-      counter = std::move(r.counter);
-      r.counter->Clean();
+  explicit SharedPtr(T* p) : ptr(p), counter(new Counter<T>(p)) {}
+
+  SharedPtr(const SharedPtr& r) {
+    if (std::is_move_constructible<T>::value) {
+      ptr = r.ptr;
+      counter = r.counter;
+      counter->AddCounter();
+    } else {
+      throw std::runtime_error("Type not constructible.");
     }
+  }
+
+  SharedPtr(SharedPtr&& r) {
+    if (std::is_move_assignable<T>::value) {
+      std::swap(ptr, r.ptr);
+      std::swap(counter, r.counter);
+    } else {
+      throw std::runtime_error("Type not assignable.");
+    }
+  }
 
   ~SharedPtr() {
     counter->Clean();
   }
 
   auto operator= (const SharedPtr& r) -> SharedPtr& {
-    ptr = r.ptr;
-    counter = r.counter;
+    if (std::is_move_constructible<T>::value && &r != this) {
+      counter->Clean();
+      ptr = r.ptr;
+      counter = r.counter;
+      counter->AddCounter();
+    } else if (&r == this) {
+      std::cout << "Object equal to this\n";
+    } else {
+      throw std::runtime_error("Type not constructible");
+    }
     return *this;
   }
 
-  auto operator=(SharedPtr&& r) -> SharedPtr& {
-    ptr = move(r.ptr);
-    counter = move(r.counter);
-    r.counter->Clean();
+  auto operator= (SharedPtr&& r) -> SharedPtr& {
+    if (std::is_move_assignable<T>::value && &r != this) {
+      std::swap(ptr, r.ptr);
+      std::swap(counter, r.counter);
+    } else if (&r == this) {
+      std::cout << "Object equal to this\n";
+    } else {
+      throw std::runtime_error("Type not assignable.");
+    }
     return *this;
   }
 
-  explicit operator bool() const {return (ptr != nullptr);}
+  explicit operator bool() const {
+    return (ptr != nullptr);
+  }
 
   auto operator*() const -> T& {return *ptr;}
 
@@ -77,16 +101,13 @@ struct Counter {
   auto get() -> T* {return ptr;}
 
   void swap(SharedPtr& r) {
-    T *temp_p = move(r.ptr);
-    Counter<T> *temp_c = move(r.counter);
-    r.ptr = move(ptr);
-    r.counter = move(counter);
-    ptr = move(temp_p);
-    counter = move(temp_c);
+    std::swap(ptr, r.ptr);
+    std::swap(counter, r.counter);
   }
+  // возвращает количество объектов SharedPtr, которые ссылаются на тот же управляемый объект
 
-  [[nodiscard]] auto use_count() const -> size_t {
-    if (ptr != nullptr) {
+  auto use_count() const -> size_t {
+    if(ptr != nullptr){
       return counter->get();
     } else {
       return 0;
@@ -98,6 +119,7 @@ struct Counter {
 
   Counter<T>* counter;
 };
+
 
 
 #endif // INCLUDE_SHAREDPTR_HPP_
