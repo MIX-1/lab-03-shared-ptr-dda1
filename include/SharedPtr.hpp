@@ -17,7 +17,7 @@ struct Counter {
   void AddCounter() {++counter;}
 
   void Clean() {
-    if(!--counter) {
+    if (!--counter) {
       ptr = nullptr;
       delete this;
     }
@@ -104,10 +104,9 @@ class SharedPtr {
     std::swap(ptr, r.ptr);
     std::swap(counter, r.counter);
   }
-  // возвращает количество объектов SharedPtr, которые ссылаются на тот же управляемый объект
 
   auto use_count() const -> size_t {
-    if(ptr != nullptr){
+    if (ptr != nullptr){
       return counter->get();
     } else {
       return 0;

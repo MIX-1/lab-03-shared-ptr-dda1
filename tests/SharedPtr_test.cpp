@@ -155,7 +155,6 @@ class is_not_constructible {
   is_not_constructible& operator= (is_not_constructible&) = delete;
 };
 TEST(Exceptions, No_Copiable) {
-
   try {
     is_not_constructible object;
     SharedPtr<is_not_constructible> sharedPtr1(&object);
@@ -170,7 +169,6 @@ class is_not_assignable {
   is_not_assignable& operator= (is_not_assignable&&) = delete;
 };
 TEST(Exceptions, No_Assignable) {
-
   try {
     is_not_assignable object;
     SharedPtr<is_not_assignable> sharedPtr1(&object);
